@@ -10,36 +10,79 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
   <div id="icon-general" class="icon32" style="background:url('<?php echo plugins_url('img/icon32.png', __FILE__) ?>') no-repeat;"><br /></div>
   <h2>
     SharePress
-    <span>a WordPress plugin from <a href="http://aaroncollegeman.com/fatpanda/" target="_blank">Fat Panda</a></span>
+    <span>a WordPress plugin from <a href="http://fatpandadev.com" target="_blank">Fat Panda</a></span>
   </h2>
 
   <form method="post" action="options.php" id="settings_form">
 
-    <?php if (!self::session()) { ?>
+    <?php if (!self::session(false)) { ?>
 
       <?php settings_fields('fb-step1') ?>
       
       <?php if (!self::is_mu()) { ?>
 
+        <?php if (!self::is_mu() && ( !defined('SHAREPRESS_MU_LICENSE_KEY') || !SHAREPRESS_MU_LICENSE_KEY )) { ?>
+
+          <h3 class="title">Your License Key</h3>
+
+          <?php 
+            #
+            # Don't be a dick. We have kids to feed. :)
+            # https://getsharepress.com
+            #
+            if (!self::unlocked()) { ?>
+            <p>
+              <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=buy-a-license">Buy a license key today</a>.
+              Unlock Facebook Pages and Twitter features, and get support from the developers of SharePress!
+            </p>
+          <?php } else { ?>
+            <p>You're a pro user! Need support? <a href="mailto:support@fatpandadev.com">Just e-mail us</a>.
+          <?php } ?>
+
+          <table class="form-table">
+            <tr>
+              <th><label for="sharepress_license_key">License Key:</label></th>
+              <td>
+                <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::license_key()) ?>" />
+              </td>
+            </tr>
+          </table>
+
+          <p class="submit">
+            <input id="btnSaveSettings" class="button" value="Save License Key" type="submit" />
+          </p>
+
+        <?php } ?>
+
         <h3 class="title">Your Facebook Application</h3>
       
+        <p>Start by visiting the <a href="https://developers.facebook.com/apps" target="_blank">App Dashboard</a>. If you haven't created an application before you will be prompted to register. Note that you have to <a href="https://www.facebook.com/help/?faq=17580" target="_blank">verify your Facebook account</a> to create apps on Facebook.</p>
+
         <p>
-          Before you continue, you'll need to create a Facebook Application. 
-          <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
-          &nbsp;&nbsp;<b><a href="https://developers.facebook.com/docs/appsonfacebook/tutorial/#create" target="_blank">Need more help?</a></b>
+          <b style="color:red;">APP DOMAINS</b>
+          &nbsp;&nbsp;Your App Domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>, and goes in <a href="http://cl.ly/image/2I3Q0d3U0d3Q" target="_blank">this field</a>.
+        </p>  
+
+        <p>
+          <b style="color:red;">SITE URL</b>
+          &nbsp;&nbsp;Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, and goes in <a href="http://cl.ly/image/0z1E0n0M2q3L" target="_blank">this field</a>.
         </p>
 
         <p>
-          <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
-          and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
-        </p>  
-        
-        <?php /* ?>
-        <p style="padding:10px; background-color:#ffffcc;">
-          <b style="color:red;">Breaking Change</b>
-          &nbsp;&nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read this</a> to learn how to properly configure your Facebook application to avoid disruption of service.
-        </p> */ ?>
+          <b style="color:red;">SANDBOX MODE</b>
+          &nbsp;&nbsp;Don't forget to <b>Disable</b> Sandbox Mode with <a href="http://cl.ly/image/0B2n0l2x120E" target="_blank">this field</a>. If you don't, no one will see your posts.
+        </p>
 
+        <?php if (self::unlocked()) { ?>
+          <p>
+            Need more help? <a href="mailto:support@fatpandadev.com">Just e-mail us</a>.
+          </p>
+        <?php } else { ?>
+          <p>
+            Need more help? <a href="http://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=go-pro">Buy a license key</a>.
+          </p>
+        <?php } ?>
+        
         <table class="form-table">
           <tr>
             <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
@@ -52,18 +95,20 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <tr>
             <td></td>
             <td>
-              <p class="submit">
+              <p class="submit" style="padding-top:0;">
                 <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
               </p>
             </td>
           </tr>
         </table>
 
+        
+
       <?php } else if (self::has_keys()) { ?>
 
         <h3 class="title">Connect to Facebook</h3>
       
-        <p>Click the button below, authorize the Facebook application, and you're in.</p>
+        <p>Click the button below, authorize the Facebook application, and you're in!</p>
 
         <table class="form-table">
           <tr>
@@ -80,7 +125,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <h3 class="title">SharePress is not setup properly.</h3>
 
-        <p>This copy of SharePress is running in MU mode, but the Facebook App Id and App Secret have not been configured.</p>
+        <p>This copy of SharePress is running in Multisite mode, but the Facebook App Id and App Secret have not been configured.</p>
 
         <p>Please contact your network admin.</p>
         
@@ -93,7 +138,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
           var btn = $('#btnConnect');
 
-          $('#settings_form').submit(function() {
+          $('#btnConnect').click(function() {
             api_key.val($.trim(api_key.val()));
             app_secret.val($.trim(app_secret.val()));  
 
@@ -131,29 +176,29 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       
       <?php settings_fields('fb-settings') ?>
 
-      <?php if (!self::is_mu()) { ?>
+      <?php if (!self::is_mu() && ( !defined('SHAREPRESS_MU_LICENSE_KEY') || !SHAREPRESS_MU_LICENSE_KEY )) { ?>
 
         <h3 class="title">Your License Key</h3>
 
         <?php 
           #
-          # Don't be a dick. I like to eat, too.
-          # http://aaroncollegeman/sharepress/
+          # Don't be a dick. We have kids to feed. :)
+          # https://getsharepress.com
           #
           if (!self::unlocked()) { ?>
           <p>
-            <a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=buy-a-license">Buy a license</a> key today.
-            Unlock pro features, get access to documentation and support from the developer of SharePress!
+            <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=buy-a-license">Buy a license</a> key today.
+            Unlock Facebook Pages and Twitter features, and get support from the developers of SharePress!
           </p>
         <?php } else { ?>
-          <p>Awesome, tamales! Need support? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
+          <p>Awesome, tamales! Need support? Email us! <a href="mailto:support@fatpandadev.com">support@fatpandadev.com</a>.
         <?php } ?>
 
         <table class="form-table">
           <tr>
             <th><label for="sharepress_license_key">License Key:</label></th>
             <td>
-              <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
+              <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::license_key()) ?>" />
             </td>
           </tr>
         </table>
@@ -184,8 +229,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           </td>
         </tr>
       </table>
-
-      <br />
+       <br />
       <h3 class="title">Post Link</h3>
       <p>Append post link to the end of Facebook messages?</p>
 
@@ -220,6 +264,17 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         For example, to override the <code>og:type</code> property, just create a Custom Field named <code>og:type</code> and give it the desired value.</p>
       
       <table class="form-table">
+        <tr>
+          <td>
+            <b>Facebook "article:publisher" url</b><br>
+            <input type="text" class="regular-text" name="<?php echo self::OPTION_SETTINGS ?>[fb_publisher_url]" id="fb_publisher_url" value="<?php echo $this->setting('fb_publisher_url') ?>">
+            <p>
+              <span class="description">
+                You may add a url to a publisher page here. It will allow readers to like your publisher page from their news feed, <a href="https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/">read this article for details.</a>
+              </span>
+            </p>
+          </td>
+        </tr>
         <tr>
           <td>
             <?php
@@ -301,46 +356,51 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       <?php } else { ?>
         <p>
           When you publish new post, where should it be announced?
-          <?php if (self::$pro) { ?>
+          <?php if (self::unlocked()) { ?>
             You'll be able to change this for each post: these are just the defaults.
           <?php } else { ?>
-            If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you will also be able to select from your Facebook pages.
+            If you <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=post-to-page">unlock the pro features</a>, you will also be able to select from your Facebook pages.
           <?php } ?>
            
         <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">
           <table class="widefat post fixed" cellspacing="0">
             <thead>
-             	<tr>
-             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
-             	</tr>
+              <tr>
+                <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+                <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
+              </tr>
             </thead>
 
             <tfoot>
-             	<tr>
-             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
+              <tr>
+                <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+                <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
               </tr>
-           	</tfoot>
+            </tfoot>
 
             <tbody>
-             	<!-- our blog owner's wall -->
-             	<tr id="" class="alternate">
-                <th scope="row" class="check-column">
-                  <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
-                </th>
-                <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
-                  <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
-              </tr>
+              <!-- our blog owner's wall -->
+              <?php if (!self::unlocked() || !self::$pro->is_excluded_page('wall')) { ?>
+                <tr id="" class="alternate">
+                  <th scope="row" class="check-column">
+                    <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
+                  </th>
+                  <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
+                    <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
+                </tr>
+              <?php } ?>
               <!-- /blog owner's wall -->
             
               <!-- all of the blog owner's pages -->
-              <?php foreach(self::pages() as $i => $page) { if (self::$pro && self::$pro->is_excluded_page($page)) continue; ?>
+              <?php foreach(self::pages() as $i => $page) { if (self::unlocked() && self::$pro->is_excluded_page($page)) continue; ?>
                 <tr class="<?php if ($i % 2) echo 'alternate' ?>">
                   <th scope="row" class="check-column">
                     <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (self::targets($page['id'])) echo 'checked="checked"' ?>>
                   </th>
-                  <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a></td>
+                  <td>
+                    <a <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;"' ?> target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a>
+                    <span <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;"' ?>>(<?php echo $page['category'] ?>)</span>
+                  </td>
                 </tr>
               <?php } ?>
             </tbody>
@@ -355,7 +415,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <br />
         <h3 class="title">Twitter</h3>
    
-        <p>If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you'll be able to post to Twitter, too.</p>
+        <p>If you <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=twitter">unlock the pro features</a>, you'll be able to post to Twitter, too.</p>
      
         <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_is_ready]" value="<?php echo self::setting('twitter_is_ready', 0) ?>" />
         <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
@@ -627,7 +687,13 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
               <div style="margin-bottom:5px;">
                 <label>
                   <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
-                  Use the first image in the post
+                  The first image in the content
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="4" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 4) echo 'checked="checked"' ?> />
+                  The first image in the gallery
                 </label>
               </div>
               <div style="margin-bottom:5px;">
@@ -642,7 +708,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <div>
           <p><b>Global default picture</b></p>
-          <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 150, 150, self::load()->get_default_picture()) ?>
+          <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 640, 640, self::load()->get_default_picture()) ?>
         </div>
         <div style="clear:left;"></div>
 
@@ -687,21 +753,134 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <br />
         <h3 class="title">Run Setup Again</h3>
 
-        <p>If you need to change Facebook Application keys, run setup again.</p>        
+        <p>If you need to change Facebook Application keys, run setup again.</p>      
 
         <p>
           <a href="options-general.php?page=sharepress&amp;action=clear_session" class="button">Run Setup Again</a>
         </p>
 
+        <br />
+        <p>For your reference, here are the keys and token being used by SharePress:</p>
+
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">App ID:</td>
+            <td>
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_API_KEY)) ?>" />
+            </td>
+          </tr>
+          <tr>
+            <td>App Secret:</td>
+            <td>
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_APP_SECRET)) ?>" />
+            </td>
+          </tr>
+          <tr>
+            <td>Access Token:</td>
+            <td>
+              <input type="text" class="regular-text" style="width:500px;" readonly="readonly" value="<?php echo esc_attr(self::facebook()->getUserAccessToken(true)) ?>" />
+              &nbsp;<a target="_blank" href="https://developers.facebook.com/tools/debug/access_token?q=<?php echo esc_attr(self::facebook()->getUserAccessToken(true)) ?>">Debug</a>
+            </td>
+          </tr>
+        </table>
+
+        <br />
+        <h3 class="title">Debugging Mode</h3>
+
+        <p>
+          Having problems? Enable debug mode to enable SharePress logging. This is especially 
+          useful when working with Fat Panda support. 
+          <?php if (!is_writable(dirname(__FILE__))) { ?>
+            <b>Note:</b> SharePress will not be able to create log files until you make the
+            SharePress plugin folder writeable, e.g., <code>CHMOD 777 <?php echo dirname(__FILE__) ?></code>
+          <?php } else { ?>
+            <a href="<?php echo admin_url('options-general.php').'?page='.$_REQUEST['page'].'&log=' ?>">Click here</a> to review log files.
+          <?php } ?>
+        </p>
+
+        <?php if (defined('SHAREPRESS_DEBUG') && SHAREPRESS_DEBUG) { ?>
+          <p><b>Debugging is enabled in code:</b> <code>SHAREPRESS_DEBUG</code> is set to <code>true</code>.</p>
+        <?php } else { ?>
+          <table class="form-table">
+            <tr>
+              <td style="width:160px;">Debugging:</td>
+              <td>
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[debugging]" value="1" <?php if (self::setting('debugging', '0') == '1') echo 'checked="checked"' ?> />
+                  Enabled
+                </label>
+                &nbsp;&nbsp;
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[debugging]" value="0" <?php if (self::setting('debugging', '0') == '0') echo 'checked="checked"' ?> />
+                  Disabled
+                </label>
+              </td>
+            </tr>
+          </table>
+        <?php } ?> 
+
+        <br />
+        <h3 class="title">"Schedule Missed" Recovery</h3>
+        
+        <b>New!</b> Now SharePress can help you recovery from the dreaded "Missed schedule" error. <a href="http://aaroncollegeman.com/2012/04/15/how-to-fix-missed-schedule-errors/" target="_blank">Learn more &rarr;</a>
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">Recovery:</td>
+            <td>
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[fix_missed_schedule]" value="1" <?php if (self::setting('fix_missed_schedule', '0') == '1') echo 'checked="checked"' ?> />
+                Enabled
+              </label>
+              &nbsp;&nbsp;
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[fix_missed_schedule]" value="0" <?php if (self::setting('fix_missed_schedule', '0') == '0') echo 'checked="checked"' ?> />
+                Disabled
+              </label>
+            </td>
+          </tr>
+        </table>
+
+        <br />
+        <h3 class="title">Get Help</h3>
+        Having trouble using SharePress? Email us! <a href="mailto:support@fatpandadev.com">support@fatpandadev.com</a>.
+        <?php if (!self::setting('license_key')) { ?>
+          Note that as an unlicensed user, your help will be limited to getting the free version up and running.
+        <?php } ?>
+
+        <br /><br />
+        <h3 class="title">Anonymous Usage Tracking</h3>       
+        Help support SharePress development - send us anonymous usage statistics. Don't want to do this? Just turn it off.
+        <br><br>
+        These are the stats we collect:
+        <ul>
+          <li>&mdash; Number of installations worldwide</li>
+          <li>&mdash; Whether or not you have purchased a license key</li>
+        </ul>
+        
+        <table class="form-table">
+          <tr>
+            <td>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="1" <?php if (self::setting('intercom_enabled', '1')) echo 'checked="checked"' ?> />
+                  Yes, send anonymous usage statistics
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="0" <?php if (self::setting('intercom_enabled', '1') == '0') echo 'checked="checked"' ?> />
+                  Disabled
+                </label>
+              </div>
+            </td>
+          </tr>
+        </table>
+        
       <?php } ?>
 
       <br />
       <p class="submit">
         <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
-      </p>
-
-      <p class="floating submit">
-        <input id="btnFloatingSaveSettings" class="button-primary" value="Save Settings" type="submit" />
       </p>
       
     <?php } ?>

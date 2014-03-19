@@ -1,5 +1,28 @@
 <?php if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
-
+<style>
+  .timestamp-wrap {
+    line-height: 23px;
+  }
+  .timestamp-wrap select {
+    height: 21px;
+    line-height: 14px;
+    padding: 0;
+    vertical-align: top;
+    font-size: 12px;
+  }
+  #sp_jj, #sp_hh, #sp_mn {
+    width: 2em;
+  }
+  #sp_aa {
+    width: 3.4em;
+  }
+  .timestamp-wrap input {
+    border-width: 1px;
+    border-style: solid;
+    padding: 1px;
+    font-size: 12px;
+  }
+</style>
 <div id="sharepress" <?php if (($posted || $scheduled || $last_posted) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
   
   <br />
@@ -46,7 +69,7 @@
     <fieldset>
       <legend>
         <label for="sharepress_meta_picture">
-          <b>Picture</b>
+          <b>Picture to Feature</b>
         </label>
       </legend>
 
@@ -56,17 +79,22 @@
   
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
-        Use this post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
+        This post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
-        Use the first image in the post
+        The first image in the content
+      </label>
+
+      <label style="display:block; margin-bottom: 8px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="4" <?php if ($meta['let_facebook_pick_pic'] == 4) echo 'checked="checked"' ?> /> 
+        The first image in the gallery
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="2" <?php if ($meta['let_facebook_pick_pic'] == 2) echo 'checked="checked"' ?> /> 
-        Use the <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
+        The <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
       </label>
     </fieldset>
   
@@ -83,15 +111,19 @@
           <p style="color:red; display:none; padding-top: 0; margin-top: 0;" id="publish_target_error">
             Choose at least one.
           </p>
-          <p>
-            <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
-            <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
-              <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
-              <?php echo $wall_name ?>
-            </label>
-          </p>
+          <?php if (!self::is_excluded_page('wall')) { ?>
+            <p>
+              <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
+              <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
+                <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
+                <?php echo $wall_name ?>
+              </label>
+            </p>
+          <?php } ?>
           <?php 
-            $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); 
+            $pages = self::pages(); 
+            usort($pages, array('Sharepress', 'sort_by_selected')); 
+            
             foreach($pages as $page) { 
               if (self::is_excluded_page($page)) {
                 continue; 
@@ -100,7 +132,7 @@
                  <p>
                   <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
                     <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
-                    <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+                    <span <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;" title="This is an Application page"' ?>><?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?></span>
                   </label>
                 </p>
               <?php
@@ -274,6 +306,7 @@
       if (check_for_featured_image && will_share && !$('#postimagediv img').size() && let_facebook_pick_pic.val() == '0') {
         $('#ajax-loading').hide();
         $('#publish').removeClass('button-primary-disabled');
+        $('#publishing-action').find('.spinner').hide();
         $('.sharepress_show_advanced').hide(); 
         $('.sharepress_advanced').slideDown();
         $('#picture_error').show();
@@ -290,6 +323,7 @@
           // reveal the targets selection, and try to focus the screen on it:
           $('#ajax-loading').hide();
           $('#publish').removeClass('button-primary-disabled');
+          $('#publishing-action').find('.spinner').hide();
           $('.sharepress_show_advanced').hide(); 
           $('.sharepress_advanced').slideDown();
           $('label[for="sharepress_meta_targets"]').css('color', 'red');
